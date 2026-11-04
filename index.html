@@ -1,11 +1,129 @@
-/* =====================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PacRim Performance Appraisal</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#fff; --ink:#1d2733; --muted:#64707d;
+    --line:#d9dfe5; --brand:#0f4c81; --ok:#1e7d3a; --err:#c0392b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+  header{background:var(--brand);color:#fff;border-radius:10px;padding:18px 20px;margin-bottom:18px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;opacity:.85;font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 12px;font-size:16px;color:var(--brand)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:600px){.grid{grid-template-columns:1fr}}
+  label.f{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+  input[type=text],input[type=date],textarea,select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
+  textarea{min-height:70px;resize:vertical}
+  .legend{font-size:12px;color:var(--muted);margin:-4px 0 12px}
+  .area{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px}
+  .area.missing{border-color:var(--err);background:#fdf2f1}
+  .area .t{font-weight:600;margin-bottom:8px}
+  .radios{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .radios label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);
+    border-radius:6px;padding:6px 12px;cursor:pointer;user-select:none}
+  .radios input{margin:0}
+  .radios label:has(input:checked){background:var(--brand);color:#fff;border-color:var(--brand)}
+  .area textarea{min-height:44px}
+  .overall{display:flex;align-items:center;justify-content:space-between;
+    background:#eef4fa;border-radius:8px;padding:12px 16px;font-weight:600}
+  #overallDisplay{font-size:22px;color:var(--brand)}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  button{font:inherit;border:0;border-radius:6px;padding:11px 18px;cursor:pointer}
+  .primary{background:var(--brand);color:#fff;font-weight:600}
+  .secondary{background:#e3e8ee;color:var(--ink)}
+  .status{margin-top:12px;padding:10px 12px;border-radius:6px;display:none}
+  .status.ok{display:block;background:#e8f5ec;color:var(--ok)}
+  .status.err{display:block;background:#fdecea;color:var(--err)}
+  .status.info{display:block;background:#eef4fa;color:var(--brand)}
+  #savedCount{font-size:13px;color:var(--muted);margin-top:8px;display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Pacific Rim Constructors — Performance Appraisal</h1>
+    <p>Rate each area 1–5 and add comments where useful.</p>
+  </header>
+
+  <form id="appraisal" novalidate>
+
+    <div class="card">
+      <h2>Employee details</h2>
+      <div class="grid">
+        <div><label class="f">Employee name *</label><input type="text" name="employee_name" required></div>
+        <div><label class="f">Job title *</label><input type="text" name="job_title" required></div>
+        <div><label class="f">Department / Site *</label><input type="text" name="department_site" required></div>
+        <div><label class="f">Appraisal period *</label><input type="text" name="appraisal_period" placeholder="e.g. Jan–Dec 2026" required></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Management areas</h2>
+      <p class="legend">1 = Poor · 2 = Below expectations · 3 = Meets · 4 = Exceeds · 5 = Outstanding</p>
+      <div id="mgrSection"></div>
+    </div>
+
+    <div class="card">
+      <h2>Core areas</h2>
+      <p class="legend">1 = Poor · 2 = Below expectations · 3 = Meets · 4 = Exceeds · 5 = Outstanding</p>
+      <div id="coreSection"></div>
+    </div>
+
+    <div class="card">
+      <div class="overall"><span>Overall rating</span><span id="overallDisplay">–</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Summary</h2>
+      <label class="f">Key strengths</label><textarea name="key_strengths"></textarea><br><br>
+      <label class="f">Areas for improvement</label><textarea name="improvement_areas"></textarea><br><br>
+      <label class="f">Goals for next year</label><textarea name="goals_next_year"></textarea><br><br>
+      <label class="f">Employee comments</label><textarea name="employee_comments"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Sign-off</h2>
+      <div class="grid">
+        <div><label class="f">Employee signature (type name)</label><input type="text" name="employee_signature"></div>
+        <div><label class="f">Supervisor / Manager *</label><input type="text" name="supervisor_manager" required></div>
+        <div><label class="f">Date *</label><input type="date" id="date" name="date" required></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="btns">
+        <button type="submit" class="primary">Submit appraisal</button>
+        <button type="button" id="exportBtn" class="secondary">Download saved entries</button>
+        <button type="button" id="templateBtn" class="secondary">Download Excel template</button>
+      </div>
+      <div id="status" class="status"></div>
+      <span id="savedCount"></span>
+    </div>
+
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* =========================================================
    CONFIG
    SUBMIT_URL  – leave "" to save locally only, or paste:
-     • Power Automate "When an HTTP request is received" URL
-     • Google Apps Script web-app URL
-   SUBMIT_MODE – "json"       for Power Automate
+                 • Power Automate "When an HTTP request is received" URL
+                 • Google Apps Script web-app URL
+   SUBMIT_MODE – "json" for Power Automate
                  "apps-script" for Google Apps Script
-   ===================================================== */
+   ========================================================= */
 const SUBMIT_URL  = "https://script.google.com/macros/s/AKfycbzEx1AOwHx2l5dXmMl4sXtPV_kvmzm3VzkX9Q9Sd54c82VmdkwE_EMjoCoEa00d9DsKFg/exec";
 const SUBMIT_MODE = "apps-script";
 
@@ -16,66 +134,79 @@ const MANAGER_AREAS = [
   ["staff_development",   "Staff development, coaching and performance management"],
   ["resource_mgmt",       "Resource management, problem-solving and compliance"]
 ];
+
 const CORE_AREAS = [
-  ["safety_compliance",   "Safety & Compliance"],
-  ["job_knowledge",       "Job Knowledge & Competence"],
-  ["work_quality",        "Work Quality & Productivity"],
-  ["accountability",      "Accountability & Reliability"],
-  ["teamwork",            "Teamwork & Communication"],
-  ["attendance",          "Attendance"],
-  ["punctuality",         "Punctuality & Discipline"]
+  ["safety_compliance", "Safety & Compliance"],
+  ["job_knowledge",     "Job Knowledge & Competence"],
+  ["work_quality",      "Work Quality & Productivity"],
+  ["accountability",    "Accountability & Reliability"],
+  ["teamwork",          "Teamwork & Communication"],
+  ["attendance",        "Attendance"],
+  ["punctuality",       "Punctuality & Discipline"]
 ];
+
 const ALL_AREAS = [...MANAGER_AREAS, ...CORE_AREAS];
 
 // Column order for Excel (use these exact headers in your Excel table)
 const COLUMNS = [
   "submitted_at","employee_name","job_title","department_site","appraisal_period",
-  ...ALL_AREAS.flatMap(([k]) => [k+"_rating", k+"_comments"]),
+  ...ALL_AREAS.flatMap(([k]) => [k + "_rating", k + "_comments"]),
   "overall_rating","key_strengths","improvement_areas","goals_next_year",
   "employee_comments","employee_signature","supervisor_manager","date"
 ];
 
-function buildArea([key,title]){
+function buildArea([key, title]){
   const d = document.createElement("div");
-  d.className = "area"; d.dataset.key = key;
+  d.className = "area";
+  d.dataset.key = key;
   let radios = "";
-  for(let i=1;i<=5;i++){
-    radios += `<input type="radio" id="${key}_${i}" name="${key}_rating" value="${i}"><label for="${key}_${i}" title="${i}">${i}</label>`;
+  for (let i = 1; i <= 5; i++){
+    radios += `<label><input type="radio" name="${key}_rating" value="${i}"> ${i}</label>`;
   }
-  d.innerHTML = `<div class="area-title">${title}</div>
-    <div class="area-row">
-      <div class="rating" role="radiogroup" aria-label="${title} rating">${radios}</div>
-      <textarea name="${key}_comments" placeholder="Comments"></textarea>
-    </div>`;
+  d.innerHTML = `
+    <div class="t">${title}</div>
+    <div class="radios">${radios}</div>
+    <textarea name="${key}_comments" placeholder="Comments"></textarea>`;
   return d;
 }
-const mgrSec = document.getElementById("mgrSection");
+
+const mgrSec  = document.getElementById("mgrSection");
 const coreSec = document.getElementById("coreSection");
 MANAGER_AREAS.forEach(a => mgrSec.appendChild(buildArea(a)));
 CORE_AREAS.forEach(a => coreSec.appendChild(buildArea(a)));
 
-const form = document.getElementById("appraisal");
-const statusEl = document.getElementById("status");
+const form      = document.getElementById("appraisal");
+const statusEl  = document.getElementById("status");
 const overallEl = document.getElementById("overallDisplay");
 document.getElementById("date").valueAsDate = new Date();
 
 function calcOverall(){
-  const vals = ALL_AREAS.map(([k]) => form.querySelector(`input[name="${k}_rating"]:checked`))
-                        .filter(Boolean).map(r => +r.value);
-  if(!vals.length){ overallEl.textContent = "–"; return ""; }
-  const avg = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
-  overallEl.textContent = avg; return avg;
+  const vals = ALL_AREAS
+    .map(([k]) => form.querySelector(`input[name="${k}_rating"]:checked`))
+    .filter(Boolean)
+    .map(r => +r.value);
+  if (!vals.length){ overallEl.textContent = "–"; return ""; }
+  const avg = (vals.reduce((a,b) => a + b, 0) / vals.length).toFixed(1);
+  overallEl.textContent = avg;
+  return avg;
 }
+
 form.addEventListener("change", e => {
-  if(e.target.type === "radio"){ e.target.closest(".area").classList.remove("missing"); calcOverall(); }
+  if (e.target.type === "radio"){
+    const area = e.target.closest(".area");
+    if (area) area.classList.remove("missing");
+    calcOverall();
+  }
 });
 
 function collect(){
   const fd = new FormData(form);
   const row = {};
   COLUMNS.forEach(c => row[c] = "");
-  for(const [k,v] of fd.entries()) row[k] = v;
-  ALL_AREAS.forEach(([k]) => row[k+"_rating"] = row[k+"_rating"] ? Number(row[k+"_rating"]) : "");
+  for (const [k, v] of fd.entries()) row[k] = v;
+  ALL_AREAS.forEach(([k]) => {
+    row[k + "_rating"] = row[k + "_rating"] ? Number(row[k + "_rating"]) : "";
+  });
   row.overall_rating = Number(calcOverall()) || "";
   row.submitted_at = new Date().toISOString();
   return row;
@@ -84,52 +215,94 @@ function collect(){
 function validate(){
   let ok = true, first = null;
   form.querySelectorAll("[required]").forEach(el => {
-    if(!el.value.trim()){ ok = false; el.style.borderColor = "var(--err)"; first = first || el; }
-    else el.style.borderColor = "";
+    if (!el.value.trim()){
+      ok = false;
+      el.style.borderColor = "var(--err)";
+      first = first || el;
+    } else {
+      el.style.borderColor = "";
+    }
   });
   ALL_AREAS.forEach(([k]) => {
     const area = form.querySelector(`.area[data-key="${k}"]`);
-    if(!form.querySelector(`input[name="${k}_rating"]:checked`)){ ok = false; area.classList.add("missing"); first = first || area; }
+    if (!form.querySelector(`input[name="${k}_rating"]:checked`)){
+      ok = false;
+      area.classList.add("missing");
+      first = first || area;
+    }
   });
-  if(first) first.scrollIntoView({behavior:"smooth", block:"center"});
+  if (first) first.scrollIntoView({behavior:"smooth", block:"center"});
   return ok;
 }
 
 // ---- local storage (backup + Excel export) ----
 const STORE = "pacrim_appraisals";
-function getSaved(){ try{ return JSON.parse(localStorage.getItem(STORE)) || []; }catch(e){ return []; } }
-function saveLocal(row){ try{ const s = getSaved(); s.push(row); localStorage.setItem(STORE, JSON.stringify(s)); }catch(e){} }
+
+function getSaved(){
+  try { return JSON.parse(localStorage.getItem(STORE)) || []; }
+  catch(e){ return []; }
+}
+
+function saveLocal(row){
+  try {
+    const s = getSaved();
+    s.push(row);
+    localStorage.setItem(STORE, JSON.stringify(s));
+  } catch(e){}
+}
+
 function updateCount(){
   const n = getSaved().length;
-  document.getElementById("savedCount").textContent = n ? `${n} appraisal(s) saved on this device.` : "";
+  document.getElementById("savedCount").textContent =
+    n ? `${n} appraisal(s) saved on this device.` : "";
 }
 updateCount();
 
-function setStatus(msg, cls){ statusEl.textContent = msg; statusEl.className = "status " + (cls||""); }
+function setStatus(msg, cls){
+  statusEl.textContent = msg;
+  statusEl.className = "status " + (cls || "");
+}
 
 async function sendRemote(row){
-  if(!SUBMIT_URL || SUBMIT_URL.startsWith("PASTE_")) return "skipped";
-  if(SUBMIT_MODE === "apps-script"){
-    await fetch(SUBMIT_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(row)});
+  if (!SUBMIT_URL || SUBMIT_URL.startsWith("PASTE_")) return "skipped";
+  if (SUBMIT_MODE === "apps-script"){
+    await fetch(SUBMIT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify(row)
+    });
     return "sent";
   }
-  const res = await fetch(SUBMIT_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(row)});
-  if(!res.ok) throw new Error("Server responded " + res.status);
+  const res = await fetch(SUBMIT_URL, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(row)
+  });
+  if (!res.ok) throw new Error("Server responded " + res.status);
   return "sent";
 }
 
 form.addEventListener("submit", async e => {
   e.preventDefault();
-  if(!validate()){ setStatus("Please complete all required fields and ratings.", "err"); return; }
+  if (!validate()){
+    setStatus("Please complete all required fields and ratings.", "err");
+    return;
+  }
   const row = collect();
-  saveLocal(row); updateCount();
-  setStatus("Submitting…");
-  try{
+  saveLocal(row);
+  updateCount();
+  setStatus("Submitting…", "info");
+  try {
     const r = await sendRemote(row);
-    setStatus(r === "sent" ? "Appraisal submitted to Excel ✓" : "Appraisal saved on this device ✓ (use Download Saved Entries to get the Excel file)", "ok");
-    form.reset(); document.getElementById("date").valueAsDate = new Date(); calcOverall();
+    setStatus(r === "sent"
+      ? "Appraisal submitted to Excel ✓"
+      : "Appraisal saved on this device ✓ (use Download Saved Entries to get the Excel file)", "ok");
+    form.reset();
+    document.getElementById("date").valueAsDate = new Date();
+    calcOverall();
     window.scrollTo({top:0, behavior:"smooth"});
-  }catch(err){
+  } catch(err){
     setStatus("Couldn't reach Excel (" + err.message + "). Saved on this device — you can export it.", "err");
   }
 });
@@ -141,9 +314,15 @@ function downloadXlsx(rows, filename){
   XLSX.utils.book_append_sheet(wb, ws, "Appraisals");
   XLSX.writeFile(wb, filename);
 }
+
 document.getElementById("exportBtn").onclick = () => {
   const rows = getSaved();
-  if(!rows.length){ setStatus("No saved entries on this device yet.", "err"); return; }
+  if (!rows.length){ setStatus("No saved entries on this device yet.", "err"); return; }
   downloadXlsx(rows, "PacRim_Appraisals.xlsx");
 };
-document.getElementById("templateBtn").onclick = () => downloadXlsx([], "PacRim_Appraisals_Template.xlsx");
+
+document.getElementById("templateBtn").onclick = () =>
+  downloadXlsx([], "PacRim_Appraisals_Template.xlsx");
+</script>
+</body>
+</html>
